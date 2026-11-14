@@ -18,7 +18,7 @@ Com ele, você pode verificar as condições climáticas da sua localização at
 
 **1. Acesse o bot**
 
-Abra o Telegram e entre na conversa com o ClimaxBot pelo link disponibilizado.
+Abra o Telegram e entre na conversa com o ClimaxBot pelo link: https://t.me/ClimaxUnaspBot
 
 **2. Inicie a conversa**
 
