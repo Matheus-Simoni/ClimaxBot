@@ -1,4 +1,3 @@
-
 import os
 import httpx
 
@@ -16,13 +15,11 @@ from telegram.ext import (
     filters
 )
 
-# Carrega o token do arquivo .env
 load_dotenv()
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 
-# Menu inicial do bot
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     botao_localizacao = KeyboardButton(
@@ -45,122 +42,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Olá! Sou seu Bot de Clima! 🌤️\n\n"
         "Escolha como deseja consultar o clima:\n\n"
-        "📍 Compartilhar sua localização atual(talvez, na versão desktop não esteja disponível).\n"
+        "📍 Compartilhar sua localização atual (talvez, na versão desktop não esteja disponível).\n"
         "✍️ Digitar o nome de uma cidade do Brasil ou do mundo.\n\n"
         "Exemplo: Campinas, Londres ou Hortolândia.",
         reply_markup=teclado
     )
 
 
-# Identifica a condição climática
-def descrever_clima(codigo):
-
-    condicoes = {
-        0: "Céu limpo ☀️",
-        1: "Predominantemente limpo 🌤️",
-        2: "Parcialmente nublado ⛅",
-        3: "Nublado ☁️",
-        45: "Neblina 🌫️",
-        48: "Neblina com geada 🌫️",
-        51: "Garoa fraca 🌦️",
-        53: "Garoa moderada 🌦️",
-        55: "Garoa intensa 🌧️",
-        61: "Chuva fraca 🌧️",
-        63: "Chuva moderada 🌧️",
-        65: "Chuva forte 🌧️",
-        71: "Neve fraca ❄️",
-        73: "Neve moderada ❄️",
-        75: "Neve forte ❄️",
-        80: "Pancadas de chuva 🌦️",
-        81: "Pancadas moderadas 🌧️",
-        82: "Pancadas fortes ⛈️",
-        95: "Tempestade ⛈️",
-        96: "Tempestade com granizo ⛈️",
-        99: "Tempestade forte com granizo ⛈️"
-    }
-
-    return condicoes.get(codigo, "Condição não identificada")
-
-
-# Consulta o clima usando latitude e longitude
-async def consultar_clima(
-    update: Update,
-    latitude: float,
-    longitude: float,
-    local: str
-):
-
-    url = "https://api.open-meteo.com/v1/forecast"
-
-    parametros = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "current": [
-            "temperature_2m",
-            "relative_humidity_2m",
-            "apparent_temperature",
-            "weather_code",
-            "wind_speed_10m"
-        ],
-        "timezone": "auto"
-    }
-
-    try:
-
-        async with httpx.AsyncClient(timeout=15) as cliente:
-
-            resposta = await cliente.get(
-                url,
-                params=parametros
-            )
-
-            resposta.raise_for_status()
-
-            dados = resposta.json()
-
-        clima = dados["current"]
-
-        temperatura = clima["temperature_2m"]
-        sensacao = clima["apparent_temperature"]
-        umidade = clima["relative_humidity_2m"]
-        vento = clima["wind_speed_10m"]
-        codigo = clima["weather_code"]
-
-        descricao = descrever_clima(codigo)
-
-        mensagem = (
-            "🌤️ CLIMA DA SUA REGIÃO\n\n"
-            f"📍 Local: {local}\n\n"
-            f"🌡️ Temperatura: {temperatura}°C\n"
-            f"🥵 Sensação térmica: {sensacao}°C\n"
-            f"💧 Umidade: {umidade}%\n"
-            f"💨 Vento: {vento} km/h\n\n"
-            f"☁️ Condição: {descricao}\n\n"
-            "📍 Consulta realizada com sucesso!\n\n"
-            "🌎 Quer tentar outra cidade?"
-        )
-
-        teclado = ReplyKeyboardMarkup(
-            [
-                ["✅ Sim, consultar outra cidade"],
-                ["❌ Não, obrigado"]
-            ],
-            resize_keyboard=True
-        )
-
-        await update.message.reply_text(
-            mensagem,
-            reply_markup=teclado
-        )
-
-    except (httpx.HTTPError, KeyError, ValueError):
-        await update.message.reply_text(
-            "Não foi possível consultar o clima. "
-            "Tente novamente mais tarde."
-        )
-
-
-# Recebe a localização compartilhada pelo Telegram
 async def receber_localizacao(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
@@ -183,7 +71,6 @@ async def receber_localizacao(
     )
 
 
-# Recebe o nome da cidade digitado pelo usuário
 async def receber_cidade(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
@@ -191,7 +78,7 @@ async def receber_cidade(
 
     cidade = update.message.text.strip()
 
-    # Verifica se o usuário deseja encerrar
+
     if cidade == "❌ Não, obrigado":
 
         teclado = ReplyKeyboardMarkup(
@@ -211,7 +98,6 @@ async def receber_cidade(
 
         return
 
-    # Verifica se deseja consultar outra cidade
     if cidade == "✅ Sim, consultar outra cidade":
 
         await update.message.reply_text(
@@ -221,7 +107,6 @@ async def receber_cidade(
 
         return
 
-    # Verifica se clicou no botão de digitar cidade
     if cidade == "✍️ Digitar outra cidade":
 
         await update.message.reply_text(
@@ -231,7 +116,6 @@ async def receber_cidade(
 
         return
 
-    # Consulta a cidade informada
     if not cidade:
 
         await update.message.reply_text(
@@ -305,7 +189,113 @@ async def receber_cidade(
         )
 
 
-# Inicialização do bot
+async def consultar_clima(
+    update: Update,
+    latitude: float,
+    longitude: float,
+    local: str
+):
+
+    url = "https://api.open-meteo.com/v1/forecast"
+
+    parametros = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "current": [
+            "temperature_2m",
+            "relative_humidity_2m",
+            "apparent_temperature",
+            "weather_code",
+            "wind_speed_10m"
+        ],
+        "timezone": "auto"
+    }
+
+    try:
+
+        async with httpx.AsyncClient(timeout=15) as cliente:
+
+            resposta = await cliente.get(
+                url,
+                params=parametros
+            )
+
+            resposta.raise_for_status()
+
+            dados = resposta.json()
+
+        clima = dados["current"]
+
+        temperatura = clima["temperature_2m"]
+        sensacao = clima["apparent_temperature"]
+        umidade = clima["relative_humidity_2m"]
+        vento = clima["wind_speed_10m"]
+        codigo = clima["weather_code"]
+
+        descricao = descrever_clima(codigo)
+
+        mensagem = (
+            "🌤️ CLIMA DA SUA REGIÃO\n\n"
+            f"📍 Local: {local}\n\n"
+            f"🌡️ Temperatura: {temperatura}°C\n"
+            f"🥵 Sensação térmica: {sensacao}°C\n"
+            f"💧 Umidade: {umidade}%\n"
+            f"💨 Vento: {vento} km/h\n\n"
+            f"☁️ Condição: {descricao}\n\n"
+            "📍 Consulta realizada com sucesso!\n\n"
+            "🌎 Quer tentar outra cidade?"
+        )
+
+        teclado = ReplyKeyboardMarkup(
+            [
+                ["✅ Sim, consultar outra cidade"],
+                ["❌ Não, obrigado"]
+            ],
+            resize_keyboard=True
+        )
+
+        await update.message.reply_text(
+            mensagem,
+            reply_markup=teclado
+        )
+
+    except (httpx.HTTPError, KeyError, ValueError):
+
+        await update.message.reply_text(
+            "Não foi possível consultar o clima. "
+            "Tente novamente mais tarde."
+        )
+
+
+def descrever_clima(codigo):
+
+    condicoes = {
+        0: "Céu limpo ☀️",
+        1: "Predominantemente limpo 🌤️",
+        2: "Parcialmente nublado ⛅",
+        3: "Nublado ☁️",
+        45: "Neblina 🌫️",
+        48: "Neblina com geada 🌫️",
+        51: "Garoa fraca 🌦️",
+        53: "Garoa moderada 🌦️",
+        55: "Garoa intensa 🌧️",
+        61: "Chuva fraca 🌧️",
+        63: "Chuva moderada 🌧️",
+        65: "Chuva forte 🌧️",
+        71: "Neve fraca ❄️",
+        73: "Neve moderada ❄️",
+        75: "Neve forte ❄️",
+        80: "Pancadas de chuva 🌦️",
+        81: "Pancadas moderadas 🌧️",
+        82: "Pancadas fortes ⛈️",
+        95: "Tempestade ⛈️",
+        96: "Tempestade com granizo ⛈️",
+        99: "Tempestade forte com granizo ⛈️"
+    }
+
+    return condicoes.get(codigo, "Condição não identificada")
+
+
 def main():
 
     if not TOKEN:
@@ -316,12 +306,10 @@ def main():
 
     app = Application.builder().token(TOKEN).build()
 
-    # Comando inicial
     app.add_handler(
         CommandHandler("start", start)
     )
 
-    # Recebe localização compartilhada
     app.add_handler(
         MessageHandler(
             filters.LOCATION,
@@ -329,7 +317,6 @@ def main():
         )
     )
 
-    # Recebe mensagens de texto
     app.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND,
